@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="MediBot — AI-powered medical symptom classification chatbot using TF-IDF and SVM machine learning." />
+  <title>MediBot — AI Symptom Classifier</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+  <!-- ── Background ambient blobs ──────────────────────────────────────── -->
+  <div class="bg-blob blob-1" aria-hidden="true"></div>
+  <div class="bg-blob blob-2" aria-hidden="true"></div>
+  <div class="bg-blob blob-3" aria-hidden="true"></div>
+
+  <!-- ── App shell ──────────────────────────────────────────────────────── -->
+  <div class="app-shell">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <span class="logo-icon">🩺</span>
+          <span class="logo-text">MediBot</span>
+        </div>
+        <p class="logo-sub">AI Symptom Classifier</p>
+      </div>
+
+      <nav class="sidebar-nav">
+        <p class="nav-label">Detectable Conditions</p>
+        <ul class="intent-list" id="intentList">
+          <li class="intent-chip loading">Loading…</li>
+        </ul>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="model-badge">
+          <span class="badge-dot"></span>
+          <span>TF-IDF + SVM Model</span>
+        </div>
+        <p class="disclaimer">⚠️ For educational use only. Not medical advice.</p>
+      </div>
+    </aside>
+
+    <!-- Main area -->
+    <main class="main">
+
+      <!-- Top bar -->
+      <header class="topbar">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="topbar-center">
+          <span class="status-dot" id="statusDot"></span>
+          <span class="topbar-title">Medical AI Assistant</span>
+        </div>
+        <button class="clear-btn" id="clearBtn" title="Clear conversation">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6l-1 14H6L5 6"></path>
+            <path d="M10 11v6M14 11v6"></path>
+            <path d="M9 6V4h6v2"></path>
+          </svg>
+          Clear
+        </button>
+      </header>
+
+      <!-- Chat window -->
+      <section class="chat-window" id="chatWindow" aria-live="polite" aria-label="Chat messages">
+
+        <!-- Welcome card -->
+        <div class="welcome-card" id="welcomeCard">
+          <div class="welcome-icon">🏥</div>
+          <h1 class="welcome-title">Hello, I'm MediBot</h1>
+          <p class="welcome-sub">Describe your symptoms and I'll classify them using a <strong>TF-IDF + SVM</strong> machine learning model trained on 1,800 medical examples.</p>
+          <div class="quick-examples">
+            <p class="quick-label">Try an example:</p>
+            <div class="chips" id="quickChips">
+              <button class="chip" data-msg="I have itching and rash">Itching &amp; rash</button>
+              <button class="chip" data-msg="I have dizziness and fatigue">Dizziness &amp; fatigue</button>
+              <button class="chip" data-msg="I have runny nose and sore throat">Runny nose &amp; sore throat</button>
+              <button class="chip" data-msg="I have severe headache and nausea">Severe headache &amp; nausea</button>
+              <button class="chip" data-msg="I have joint pain and stiffness">Joint pain &amp; stiffness</button>
+              <button class="chip" data-msg="I have cough and chest pain">Cough &amp; chest pain</button>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Input area -->
+      <div class="input-area">
+        <div class="input-wrapper">
+          <textarea
+            id="userInput"
+            class="message-input"
+            placeholder="Describe your symptoms… (e.g. I have itching and rash)"
+            rows="1"
+            maxlength="500"
+            aria-label="Type your symptoms"
+          ></textarea>
+          <button class="send-btn" id="sendBtn" aria-label="Send message" title="Send (Enter)">
+            <svg class="send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </div>
+        <div class="input-hint">
+          Press <kbd>Enter</kbd> to send &nbsp;·&nbsp; <kbd>Shift+Enter</kbd> for new line
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Message template (cloned by JS) -->
+  <template id="msgTemplate">
+    <div class="message">
+      <div class="avatar"></div>
+      <div class="bubble-wrapper">
+        <div class="bubble"></div>
+        <div class="meta"></div>
+      </div>
+    </div>
+  </template>
+
+  <!-- Typing indicator template -->
+  <template id="typingTemplate">
+    <div class="message bot-message typing-msg" id="typingIndicator">
+      <div class="avatar bot-avatar">🩺</div>
+      <div class="bubble-wrapper">
+        <div class="bubble bot-bubble typing-bubble">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,52 +1,62 @@
-import torch
-import torch.nn as nn
+"""
+model.py — Load the saved model and make predictions
+------------------------------------------------------
+This module is imported by the Flask app (app.py).
+It loads the three serialised artifacts and exposes
+a single `predict(text)` function.
+"""
+
+import os
+import pickle
+import numpy as np
+
+BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
+MODELS_DIR = os.path.join(BASE_DIR, "models")
+
+# ── Load artifacts once at import time ───────────────────────────────────────
+def _load_artifact(name: str):
+    path = os.path.join(MODELS_DIR, name)
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Model artifact not found: {path}\n"
+            "Please run  python train.py  first."
+        )
+    with open(path, "rb") as f:
+        return pickle.load(f)
 
 
-class NeuralNet(nn.Module):
+vectorizer = _load_artifact("tfidf_vectorizer.pkl")
+classifier = _load_artifact("svm_classifier.pkl")
+label_enc  = _load_artifact("label_encoder.pkl")
+
+print(f"Model loaded. Classes: {list(label_enc.classes_)}")
+
+
+# ── Public API ────────────────────────────────────────────────────────────────
+def predict(text: str) -> dict:
     """
-    Feed-Forward Neural Network for intent classification.
+    Classify a user message.
 
-    Architecture:
-        Input Layer  -> Hidden Layer 1 -> Hidden Layer 2 -> Output Layer
-        (bag size)       (hidden_size)      (hidden_size)     (num_tags)
-
-    Activation: ReLU after each hidden layer.
-    No activation on output — CrossEntropyLoss handles that internally.
+    Returns
+    -------
+    dict with keys:
+        intent      – predicted class name  (str)
+        confidence  – probability 0.0-1.0   (float)
+        probabilities – {class: prob, …}    (dict)
     """
+    vec   = vectorizer.transform([text])
+    label = classifier.predict(vec)[0]
+    proba = classifier.predict_proba(vec)[0]
 
-    def __init__(self, input_size, hidden_size, num_classes):
-        """
-        Args:
-            input_size  : number of unique words in the vocabulary (bag of words size)
-            hidden_size : number of neurons in each hidden layer (hyperparameter)
-            num_classes : number of intent tags the model needs to classify
-        """
-        super(NeuralNet, self).__init__()
+    intent      = label_enc.inverse_transform([label])[0]
+    confidence  = float(np.max(proba))
+    probs_dict  = {
+        cls: round(float(p), 4)
+        for cls, p in zip(label_enc.classes_, proba)
+    }
 
-        # Layer 1: input -> hidden
-        self.l1 = nn.Linear(input_size, hidden_size)
-
-        # Layer 2: hidden -> hidden
-        self.l2 = nn.Linear(hidden_size, hidden_size)
-
-        # Layer 3: hidden -> output (one score per tag)
-        self.l3 = nn.Linear(hidden_size, num_classes)
-
-        # Activation function — applied after layers 1 and 2
-        self.relu = nn.ReLU()
-
-    def forward(self, x):
-        """
-        Forward pass: push input through all 3 layers.
-
-        Args:
-            x : input tensor (bag of words vector)
-
-        Returns:
-            out : raw scores for each tag (logits) — NOT probabilities yet
-                  Use torch.softmax() on the output to get probabilities
-        """
-        out = self.relu(self.l1(x))   # input -> hidden 1 -> ReLU
-        out = self.relu(self.l2(out)) # hidden 1 -> hidden 2 -> ReLU
-        out = self.l3(out)            # hidden 2 -> output (no activation here)
-        return out
+    return {
+        "intent":        intent,
+        "confidence":    round(confidence, 4),
+        "probabilities": probs_dict,
+    }
